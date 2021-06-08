@@ -1,7 +1,6 @@
 class TestApp : Gtk.Application {
     public TestApp() {
-        // Need to look here
-        Object(application_id: "org.iddev.testapp");
+        GLib.Object(application_id: "org.iddev.testapp");
     }
 
     public override void activate() {
