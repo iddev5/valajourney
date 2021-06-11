@@ -1,17 +1,7 @@
 public class TextEditorWindow : Gtk.ApplicationWindow {
-    private struct File {
-        string filename;
-        Gtk.TextBuffer buffer;
-
-        public File() {
-            filename = "unnamed";
-            buffer = new Gtk.TextBuffer(null);
-        }
-    }
-
-    private File[] _files = {};
     private Gtk.Grid _grid;
     private GLib.File? _file;
+    private Gtk.TextBuffer _buffer;
     private string[] _args;
 
     internal TextEditorWindow(Gtk.Application app, string[] args) {
@@ -48,9 +38,8 @@ public class TextEditorWindow : Gtk.ApplicationWindow {
     }
 
     private void init_text() {
-        this._files += File();
-        var buf = this._files[0];
-        var editor = new Gtk.TextView.with_buffer(buf.buffer);
+        this._buffer = new Gtk.TextBuffer(null);
+        var editor = new Gtk.TextView.with_buffer(this._buffer);
         // editor.set_wrap_mode(Gtk.WrapMode.WORD);
 
         var scroll_window = new Gtk.ScrolledWindow(null, null);
@@ -100,7 +89,7 @@ public class TextEditorWindow : Gtk.ApplicationWindow {
     }
 
     private void save_to_file() {
-        var buffer = this._files[0].buffer;
+        var buffer = this._buffer;
 
         Gtk.TextIter start, end;
         buffer.get_bounds(out start, out end);
@@ -117,7 +106,7 @@ public class TextEditorWindow : Gtk.ApplicationWindow {
 }
 
 public class TextEditor : Gtk.Application {
-    private string[] args;
+    private string[] _args;
 
     internal TextEditor() {
         GLib.Object(application_id: "org.iddev5.TextEditor");
@@ -127,8 +116,9 @@ public class TextEditor : Gtk.Application {
         new TextEditorWindow(this, this._args).show_all();
     }
 
-    protected override int command_line(Gtk.ApplicationCommandLine cliargs) {
+    protected override int command_line(GLib.ApplicationCommandLine cliargs) {
         this._args = cliargs.get_arguments();
+        return 0;
     }
 }
 
