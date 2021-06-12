@@ -26,30 +26,50 @@ public class TextEditorWindow : Gtk.ApplicationWindow {
     private void init_menu() {
         var menubar = new Gtk.MenuBar();
 
-        var file_item = new Gtk.MenuItem.with_label("File");
-        file_item.set_submenu(new Gtk.Menu());
+        /* File Menu */
+        var file_menu = new Gtk.MenuItem.with_label("File");
+        file_menu.set_submenu(new Gtk.Menu());
 
         var new_opt = new Gtk.MenuItem.with_label("New");
         new_opt.activate.connect(this.new_file);
-        file_item.submenu.append(new_opt);
+        file_menu.submenu.append(new_opt);
 
         var open_opt = new Gtk.MenuItem.with_label("Open File...");
         open_opt.activate.connect(this.open_file);
-        file_item.submenu.append(open_opt);
+        file_menu.submenu.append(open_opt);
+
+        file_menu.submenu.append(new Gtk.SeparatorMenuItem());
 
         var save_opt = new Gtk.MenuItem.with_label("Save");
         save_opt.activate.connect(this.save_file);
-        file_item.submenu.append(save_opt);
+        file_menu.submenu.append(save_opt);
 
         var save_as_opt = new Gtk.MenuItem.with_label("Save As...");
         save_as_opt.activate.connect(this.save_as_file);
-        file_item.submenu.append(save_as_opt);
+        file_menu.submenu.append(save_as_opt);
+
+        file_menu.submenu.append(new Gtk.SeparatorMenuItem());
 
         var quit_opt = new Gtk.MenuItem.with_label("Quit");
         quit_opt.activate.connect(this.application.quit);
-        file_item.submenu.append(quit_opt);
+        file_menu.submenu.append(quit_opt);
 
-        menubar.append(file_item);
+        menubar.append(file_menu);
+
+        /* Edit menu */
+        var edit_menu = new Gtk.MenuItem.with_label("Edit");
+        edit_menu.set_submenu(new Gtk.Menu());
+
+        var undo_opt = new Gtk.MenuItem.with_label("Undo");
+        undo_opt.activate.connect(() => { /* later */ });
+        edit_menu.submenu.append(undo_opt);
+
+        var redo_opt = new Gtk.MenuItem.with_label("Redo");
+        redo_opt.activate.connect(() => { /* later */ });
+        edit_menu.submenu.append(redo_opt);
+
+        menubar.append(edit_menu);
+
         this._grid.attach(menubar, 0, 0, 1, 1);
     }
 
@@ -81,12 +101,14 @@ public class TextEditorWindow : Gtk.ApplicationWindow {
     }
 
     private void new_file() {
+        #if 0
         if (this._buffer.get_modified()) {
             // TODO: Ask whether you want to save or not!
             // Plus this doesnt work as its async
             // Need to do something to make it wait
             save_file();
         }
+        #endif
 
         this._name = "";
         this._file = null;
