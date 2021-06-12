@@ -33,6 +33,10 @@ public class TextEditorWindow : Gtk.ApplicationWindow {
         new_opt.activate.connect(this.new_file);
         file_item.submenu.append(new_opt);
 
+        var open_opt = new Gtk.MenuItem.with_label("Open File...");
+        open_opt.activate.connect(this.open_file);
+        file_item.submenu.append(open_opt);
+
         var save_opt = new Gtk.MenuItem.with_label("Save");
         save_opt.activate.connect(this.save_file);
         file_item.submenu.append(save_opt);
@@ -92,6 +96,50 @@ public class TextEditorWindow : Gtk.ApplicationWindow {
         change_title();
     }
 
+    private void open_file() {
+        /* (Doesnt work right now)
+        if (this._buffer.get_modified()) {
+            save_file();
+        }
+        */
+
+        var open_dialog = new Gtk.FileChooserDialog(
+            "Pick a file", this as Gtk.Window, Gtk.FileChooserAction.OPEN,
+            "Cancel", Gtk.ResponseType.CANCEL, "Open", Gtk.ResponseType.ACCEPT);
+
+        open_dialog.local_only = false;
+        open_dialog.set_modal(true);
+        open_dialog.response.connect(this.open_cb);
+        open_dialog.show();
+    }
+
+    private void open_cb(Gtk.Dialog dialog, int response_id) {
+        var open_dialog = dialog as Gtk.FileChooserDialog;
+
+        switch (response_id) {
+            case Gtk.ResponseType.ACCEPT:
+                this._file = open_dialog.get_file();
+                this._name = this._file.get_basename();
+
+                uint8[] file_contents;
+                try {
+                    this._file.load_contents(null, out file_contents, null);
+                }
+                catch (GLib.Error err) {
+                    stderr.printf("%s\n", err.message);
+                }
+
+                this._buffer.set_text((string)file_contents, file_contents.length);
+                this._buffer.set_modified(false);
+                this.change_title();
+                break;
+            default:
+                break;
+        }
+
+        dialog.destroy();
+    }
+
     private void save_file() {
         if (this._name == "") {
             save_as_file();
@@ -99,7 +147,6 @@ public class TextEditorWindow : Gtk.ApplicationWindow {
         else {
             save_to_file();
         }
-
     }
 
     private void save_as_file() {
@@ -148,7 +195,7 @@ public class TextEditorWindow : Gtk.ApplicationWindow {
                 GLib.FileCreateFlags.NONE, null, null);
             this._name = this._file.get_basename();
             this._buffer.set_modified(false);
-            change_title();
+            this.change_title();
         }
         catch (GLib.Error err) {
             stderr.printf("%s\n", err.message);
