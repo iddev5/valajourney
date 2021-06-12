@@ -1,6 +1,7 @@
 public class TextEditorWindow : Gtk.ApplicationWindow {
     private Gtk.Grid _grid;
     private GLib.File? _file;
+    private string _name;
     private Gtk.TextBuffer _buffer;
     private string[] _args;
 
@@ -17,7 +18,10 @@ public class TextEditorWindow : Gtk.ApplicationWindow {
 
         init_menu();
         init_text();
+
+        this.new_file();
     }
+
 
     private void init_menu() {
         var menubar = new Gtk.MenuBar();
@@ -25,9 +29,17 @@ public class TextEditorWindow : Gtk.ApplicationWindow {
         var file_item = new Gtk.MenuItem.with_label("File");
         file_item.set_submenu(new Gtk.Menu());
 
+        var new_opt = new Gtk.MenuItem.with_label("New");
+        new_opt.activate.connect(this.new_file);
+        file_item.submenu.append(new_opt);
+
         var save_opt = new Gtk.MenuItem.with_label("Save");
         save_opt.activate.connect(this.save_file);
         file_item.submenu.append(save_opt);
+
+        var save_as_opt = new Gtk.MenuItem.with_label("Save As...");
+        save_as_opt.activate.connect(this.save_as_file);
+        file_item.submenu.append(save_as_opt);
 
         var quit_opt = new Gtk.MenuItem.with_label("Quit");
         quit_opt.activate.connect(this.application.quit);
@@ -37,8 +49,15 @@ public class TextEditorWindow : Gtk.ApplicationWindow {
         this._grid.attach(menubar, 0, 0, 1, 1);
     }
 
+    private void change_title() {
+        this.title = (this._name != "" ? this._name : "<unnamed>") +
+            (this._buffer.get_modified() ? "*" : "") + " - Text Editor";
+    }
+
     private void init_text() {
         this._buffer = new Gtk.TextBuffer(null);
+        this._buffer.set_modified(false);
+        this._buffer.changed.connect(on_buf_change);
         var editor = new Gtk.TextView.with_buffer(this._buffer);
         // editor.set_wrap_mode(Gtk.WrapMode.WORD);
 
@@ -52,7 +71,38 @@ public class TextEditorWindow : Gtk.ApplicationWindow {
         this._grid.attach(scroll_window, 0, 1, 1, 1);
     }
 
+
+    private void on_buf_change() {
+        change_title();
+    }
+
+    private void new_file() {
+        if (this._buffer.get_modified()) {
+            // TODO: Ask whether you want to save or not!
+            // Plus this doesnt work as its async
+            // Need to do something to make it wait
+            save_file();
+        }
+
+        this._name = "";
+        this._file = null;
+        this._buffer.set_text("");
+        this._buffer.set_modified(false);
+
+        change_title();
+    }
+
     private void save_file() {
+        if (this._name == "") {
+            save_as_file();
+        }
+        else {
+            save_to_file();
+        }
+
+    }
+
+    private void save_as_file() {
         var save_dialog = new Gtk.FileChooserDialog(
             "Enter file name", this as Gtk.Window, Gtk.FileChooserAction.SAVE,
             "Cancel", Gtk.ResponseType.CANCEL, "Save", Gtk.ResponseType.ACCEPT);
@@ -89,15 +139,16 @@ public class TextEditorWindow : Gtk.ApplicationWindow {
     }
 
     private void save_to_file() {
-        var buffer = this._buffer;
-
         Gtk.TextIter start, end;
-        buffer.get_bounds(out start, out end);
+        this._buffer.get_bounds(out start, out end);
 
-        var text = buffer.get_text(start, end, false);
+        var text = this._buffer.get_text(start, end, false);
         try {
             this._file.replace_contents(text.data, null, false,
                 GLib.FileCreateFlags.NONE, null, null);
+            this._name = this._file.get_basename();
+            this._buffer.set_modified(false);
+            change_title();
         }
         catch (GLib.Error err) {
             stderr.printf("%s\n", err.message);
