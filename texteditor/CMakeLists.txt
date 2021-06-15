@@ -12,5 +12,8 @@ vala_precompile(VALA_SRC texteditor
     PACKAGES gtk+-3.0
 )
 
-# Dummy command for now
-add_executable(test ${VALA_SRC})
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(GTK REQUIRED IMPORTED_TARGET gtk+-3.0)
+
+add_executable(texteditor ${VALA_SRC})
+target_link_libraries(test PUBLIC PkgConfig::GTK)

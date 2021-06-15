@@ -220,8 +220,7 @@ macro(vala_precompile output target_name)
     COMMAND
         ${VALA_EXECUTABLE}
     ARGS
-        # My edit: hack to directly compile executable
-        # "-C"
+        "-C"
         ${header_arguments}
         ${vapi_arguments}
         ${gir_arguments}
